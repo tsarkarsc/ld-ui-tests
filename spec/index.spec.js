@@ -166,6 +166,7 @@ describe("Loblaws.ca", () => {
 
     test("T5 - French version of T1", async () => {
         await page.goto(`${LL_SITE}`);
+        await page.waitFor(1000);
 
         // assume in english mode
         let englishFrenchBtnText = await page.evaluate((efbText) => {
@@ -240,7 +241,8 @@ describe("Loblaws.ca", () => {
 
     test("T6 - French version of T2", async () => {
         await page.goto(`${LL_SITE}`);
-
+        await page.waitFor(2000);
+        
         // assume in english mode
         let englishFrenchBtnText = await page.evaluate((efbText) => {
             const e = document.querySelector(efbText);
