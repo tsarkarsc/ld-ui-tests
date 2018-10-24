@@ -81,4 +81,25 @@ describe("Loblaws.ca", () => {
 
     }, 20000);
 
+    test("T2 - Search for oranges, and confirm that deal badge exists", async () => {
+        await page.goto(`${LL_SITE}`);
+
+        // perform search
+        await page.click(loblaw.selectors.searchBar);
+        await page.type(loblaw.selectors.searchBar, 'oranges');
+        await page.click(loblaw.selectors.searchBarBtn);
+        await page.waitForNavigation();
+
+        const searchResultText = await page.evaluate((searchResultText) => {
+            const e = document.querySelector(searchResultText);
+            return e.innerHTML;
+        }, loblaw.selectors.searchResultText);
+        expect(searchResultText.toLowerCase().includes('oranges')).toBeTruthy();
+
+        // check for deal in initial results
+        const dealBadge = await page.$(loblaw.selectors.dealBadge);
+        expect(dealBadge).not.toBeNull();
+
+    }, 20000);
+
 });
