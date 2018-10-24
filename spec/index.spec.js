@@ -27,7 +27,7 @@ const loblaw = {
 
 beforeAll(async () => {
     // headful during development
-    browser = await puppeteer.launch({ headless: false });
+    browser = await puppeteer.launch({ headless: true });
     page = await browser.newPage();
     await page.setViewport({ width, height });
 });
@@ -166,7 +166,7 @@ describe("Loblaws.ca", () => {
 
     test("T5 - French version of T1", async () => {
         await page.goto(`${LL_SITE}`);
-        await page.waitFor(1000);
+        await page.waitFor(2000);
 
         // assume in english mode
         let englishFrenchBtnText = await page.evaluate((efbText) => {
@@ -226,7 +226,7 @@ describe("Loblaws.ca", () => {
         }
 
         // go back to english mode
-        await page.waitFor(2000);
+        await page.waitFor(1000);
         await page.click(loblaw.selectors.englishFrenchBtn);
         await page.waitFor(2000);
 
@@ -281,7 +281,7 @@ describe("Loblaws.ca", () => {
         expect(dealBadge).not.toBeNull();
 
         // go back to english mode
-        await page.waitFor(2000);
+        await page.waitFor(1000);
         await page.click(loblaw.selectors.englishFrenchBtn);
         await page.waitFor(2000);
 
