@@ -176,4 +176,58 @@ describe("Loblaws.ca", () => {
 
     }, 20000);
 
+    test("T4 - French version of T2", async () => {
+        await page.goto(`${LL_SITE}`);
+
+        // assume in english mode
+        let englishFrenchBtnText = await page.evaluate((efbText) => {
+            const e = document.querySelector(efbText);
+            return e.innerHTML;
+        }, loblaw.selectors.englishFrenchBtn);
+        expect(englishFrenchBtnText.toLowerCase().includes('fr')).toBeTruthy();
+
+        await page.click(loblaw.selectors.englishFrenchBtn);
+        await page.waitFor(2000);
+
+        // check switched to french mode
+        englishFrenchBtnText = await page.evaluate((efbText) => {
+            const e = document.querySelector(efbText);
+            return e.innerHTML;
+        }, loblaw.selectors.englishFrenchBtn);
+        expect(englishFrenchBtnText.toLowerCase().includes('en')).toBeTruthy();
+
+        // search module should have a french class attached
+        const searchModuleFrenchVer = await page.$(loblaw.selectors.searchModuleFrench);
+        expect(searchModuleFrenchVer).not.toBeNull();
+
+        // perform search
+        await page.click(loblaw.selectors.searchBar);
+        await page.type(loblaw.selectors.searchBar, 'oranges');
+        await page.click(loblaw.selectors.searchBarBtn);
+        await page.waitForNavigation();
+
+        const searchResultText = await page.evaluate((searchResultText) => {
+            const e = document.querySelector(searchResultText);
+            return e.innerHTML;
+        }, loblaw.selectors.searchResultText);
+        expect(searchResultText.toLowerCase().includes('oranges')).toBeTruthy();
+
+        // check for deal in initial results
+        const dealBadge = await page.$(loblaw.selectors.dealBadge);
+        expect(dealBadge).not.toBeNull();
+
+        // go back to english mode
+        await page.waitFor(2000);
+        await page.click(loblaw.selectors.englishFrenchBtn);
+        await page.waitFor(2000);
+
+        // check switched back to english mode
+        englishFrenchBtnText = await page.evaluate((efbText) => {
+            const e = document.querySelector(efbText);
+            return e.innerHTML;
+        }, loblaw.selectors.englishFrenchBtn);
+        expect(englishFrenchBtnText.toLowerCase().includes('fr')).toBeTruthy();
+
+    }, 20000);
+
 });
