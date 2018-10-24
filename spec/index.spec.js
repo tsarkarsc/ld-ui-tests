@@ -1,37 +1,84 @@
-import puppeteer from "puppeteer";
+import puppeteer from 'puppeteer';
 
-const GH_SITE = "https://www.github.com";
 const LL_SITE = "https://www.loblaws.ca";
-
-let browser;
-let page;
+const ZR_SITE = "https://www.zehrs.ca";
 
 // default viewport size 
 const width = 1920;
 const height = 1080;
 
+let browser;
+let page;
+
+const loblaw = {
+    selectors: {
+        dealBadge: '.deal-badge',
+        englishFrenchBtn : 'body > div.header-bar > ul > li:nth-child(3) > a',
+        priceDescBtn: 'button[data-sort-type=price-desc]',
+        regPriceText: 'div.product-info > div.price > div > span.reg-price > span.reg-price-text',
+        // selectors such as #search-bar OR .search-form weren't working with page.click(), so I used a deeper path
+        // page.click(#search-bar) was failing with node not visible 
+        searchBar: '#navigation > div > div > div.search-form > form > div > div > span > span > #search-bar',
+        searchBarBtn: '#navigation > div > div > div.search-form > form > div > div > span > span > button[type=submit]',
+        searchModuleFrench : '.fr-search-module',
+        searchResultText: 'div.result-header-content > h3 > span.term-result-found'
+    }
+}
+
 beforeAll(async () => {
-    browser = await puppeteer.launch();
+    // headful during development
+    browser = await puppeteer.launch({ headless: false });
     page = await browser.newPage();
     await page.setViewport({ width, height });
 });
+
+afterEach(async () => {
+    await page.setViewport({ width, height });
+})
 
 afterAll(() => {
     browser.close();
 });
 
-describe("Initial setup testing", () => {
+describe("Loblaws.ca", () => {
 
-    test("github screenshot", async () => {
-        await page.goto(`${GH_SITE}`);
-        await page.screenshot({ path: 'screenshots/github.png' });
-    }, 16000);
-
-    test("loblaws screenshot", async () => {
-        await page.setViewport({ width:600, height:600 });
+    test("T1 - Search for apples, and sort by price (desc)", async () => {
         await page.goto(`${LL_SITE}`);
-        await page.screenshot({ path: 'screenshots/loblaw.png' });
-    }, 16000);
+        
+        // perform search
+        await page.click(loblaw.selectors.searchBar);
+        await page.type(loblaw.selectors.searchBar, 'apples');
+        await page.click(loblaw.selectors.searchBarBtn);
+        await page.waitForNavigation();
+
+        // sort
+        await page.click(loblaw.selectors.priceDescBtn);
+        await page.waitFor(2000);
+
+        const searchResultText = await page.evaluate((searchResultText) => {
+            const e = document.querySelector(searchResultText);
+            return e.innerHTML;
+        }, loblaw.selectors.searchResultText);
+        expect(searchResultText.toLowerCase().includes('apples')).toBeTruthy();
+
+        // extract float versions of prices from the product results
+        const regPrices = await page.evaluate((regPrice) => {
+            const regPrices = document.querySelectorAll(regPrice);
+
+            let values = [];
+            regPrices.forEach(e => {
+                values.push(parseFloat(e.innerHTML.substring(1)));
+            });
+
+            return values;
+        }, loblaw.selectors.regPriceText)
+
+        // confirm prices are in descending order
+        const n = Math.min(regPrices.length, 100);
+        for (let i = 0; i < n - 1; i++) {
+            expect(regPrices[i]).toBeGreaterThanOrEqual(regPrices[i + 1]);
+        }
+
+    }, 20000);
 
 });
-
