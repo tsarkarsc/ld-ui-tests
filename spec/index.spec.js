@@ -102,4 +102,78 @@ describe("Loblaws.ca", () => {
 
     }, 20000);
 
+    test("T3 - French version of T1", async () => {
+        await page.goto(`${LL_SITE}`);
+
+        // assume in english mode
+        let englishFrenchBtnText = await page.evaluate((efbText) => {
+            const e = document.querySelector(efbText);
+            return e.innerHTML;
+        }, loblaw.selectors.englishFrenchBtn);
+        expect(englishFrenchBtnText.toLowerCase().includes('fr')).toBeTruthy();
+
+        await page.click(loblaw.selectors.englishFrenchBtn);
+        await page.waitFor(2000);
+
+        // check switched to french mode
+        englishFrenchBtnText = await page.evaluate((efbText) => {
+            const e = document.querySelector(efbText);
+            return e.innerHTML;
+        }, loblaw.selectors.englishFrenchBtn);
+        expect(englishFrenchBtnText.toLowerCase().includes('en')).toBeTruthy();
+
+        // search module should have a french class 
+        const searchModuleFrenchVer = await page.$(loblaw.selectors.searchModuleFrench);
+        expect(searchModuleFrenchVer).not.toBeNull();
+
+        // perform search
+        await page.click(loblaw.selectors.searchBar);
+        await page.type(loblaw.selectors.searchBar, 'pommes');
+        await page.click(loblaw.selectors.searchBarBtn);
+        await page.waitForNavigation();
+
+        // sort
+        await page.click(loblaw.selectors.priceDescBtn);
+        await page.waitFor(2000);
+
+        const searchResultText = await page.evaluate((searchResultText) => {
+            const e = document.querySelector(searchResultText);
+            return e.innerHTML;
+        }, loblaw.selectors.searchResultText);
+        expect(searchResultText.toLowerCase().includes('pommes')).toBeTruthy();
+
+        // extract float versions of prices from the product results
+        const regPrices = await page.evaluate((regPrice) => {
+            const regPrices = document.querySelectorAll(regPrice);
+
+            let values = [];
+            regPrices.forEach(e => {
+                const idxOfComma = e.innerHTML.indexOf(',');
+                // convert price format from French to English, then parse float
+                values.push(parseFloat(e.innerHTML.substring(0, idxOfComma) + '.' + e.innerHTML.slice(idxOfComma+1, 2)));
+            });
+
+            return values;
+        }, loblaw.selectors.regPriceText)
+
+        // confirm prices are in descending order
+        const n = Math.min(regPrices.length, 100);
+        for (let i = 0; i < n - 1; i++) {
+            expect(regPrices[i]).toBeGreaterThanOrEqual(regPrices[i + 1]);
+        }
+
+        // go back to english mode
+        await page.waitFor(2000);
+        await page.click(loblaw.selectors.englishFrenchBtn);
+        await page.waitFor(2000);
+
+        // check switched back to english mode
+        englishFrenchBtnText = await page.evaluate((efbText) => {
+            const e = document.querySelector(efbText);
+            return e.innerHTML;
+        }, loblaw.selectors.englishFrenchBtn);
+        expect(englishFrenchBtnText.toLowerCase().includes('fr')).toBeTruthy();
+
+    }, 20000);
+
 });
