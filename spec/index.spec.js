@@ -102,7 +102,69 @@ describe("Loblaws.ca", () => {
 
     }, 20000);
 
-    test("T3 - French version of T1", async () => {
+    test("T3 - Responsive version (screen <700px) of T1", async () => {
+        await page.goto(`${LL_SITE}`);
+        await page.setViewport({ width: 600, height: 600 });
+
+        // perform search
+        await page.click(loblaw.selectors.searchBar);
+        await page.type(loblaw.selectors.searchBar, 'apples');
+        await page.keyboard.press('Enter');
+        await page.waitForNavigation();
+
+        // sort
+        await page.click(loblaw.selectors.priceDescBtn);
+        await page.waitFor(2000);
+
+        const searchResultText = await page.evaluate((searchResultText) => {
+            const e = document.querySelector(searchResultText);
+            return e.innerHTML;
+        }, loblaw.selectors.searchResultText);
+        expect(searchResultText.toLowerCase().includes('apples')).toBeTruthy();
+
+        // extract float versions of prices from the product results
+        const regPrices = await page.evaluate((regPrice) => {
+            const regPrices = document.querySelectorAll(regPrice);
+
+            let values = [];
+            regPrices.forEach(e => {
+                values.push(parseFloat(e.innerHTML.substring(1)));
+            });
+
+            return values;
+        }, loblaw.selectors.regPriceText)
+
+        // confirm prices are in descending order
+        const n = Math.min(regPrices.length, 100);
+        for (let i = 0; i < n - 1; i++) {
+            expect(regPrices[i]).toBeGreaterThanOrEqual(regPrices[i + 1]);
+        }
+
+    }, 20000);
+
+    test("T4 - Responsive version (screen <700px) of T2", async () => {
+        await page.goto(`${LL_SITE}`);
+        await page.setViewport({ width: 600, height: 600 });
+
+        // perform search
+        await page.click(loblaw.selectors.searchBar);
+        await page.type(loblaw.selectors.searchBar, 'oranges');
+        await page.keyboard.press('Enter');
+        await page.waitForNavigation();
+
+        const searchResultText = await page.evaluate((searchResultText) => {
+            const e = document.querySelector(searchResultText);
+            return e.innerHTML;
+        }, loblaw.selectors.searchResultText);
+        expect(searchResultText.toLowerCase().includes('oranges')).toBeTruthy();
+
+        // check for deal in initial results
+        const dealBadge = await page.$(loblaw.selectors.dealBadge);
+        expect(dealBadge).not.toBeNull();
+
+    }, 20000);
+
+    test("T5 - French version of T1", async () => {
         await page.goto(`${LL_SITE}`);
 
         // assume in english mode
@@ -176,7 +238,7 @@ describe("Loblaws.ca", () => {
 
     }, 20000);
 
-    test("T4 - French version of T2", async () => {
+    test("T6 - French version of T2", async () => {
         await page.goto(`${LL_SITE}`);
 
         // assume in english mode
@@ -227,68 +289,6 @@ describe("Loblaws.ca", () => {
             return e.innerHTML;
         }, loblaw.selectors.englishFrenchBtn);
         expect(englishFrenchBtnText.toLowerCase().includes('fr')).toBeTruthy();
-
-    }, 20000);
-
-    test("T5 - Responsive version (screen <700px) of T1", async () => {
-        await page.goto(`${LL_SITE}`);
-        await page.setViewport({ width: 600, height: 600 });
-
-        // perform search
-        await page.click(loblaw.selectors.searchBar);
-        await page.type(loblaw.selectors.searchBar, 'apples');
-        await page.keyboard.press('Enter');
-        await page.waitForNavigation();
-
-        // sort
-        await page.click(loblaw.selectors.priceDescBtn);
-        await page.waitFor(2000);
-
-        const searchResultText = await page.evaluate((searchResultText) => {
-            const e = document.querySelector(searchResultText);
-            return e.innerHTML;
-        }, loblaw.selectors.searchResultText);
-        expect(searchResultText.toLowerCase().includes('apples')).toBeTruthy();
-
-        // extract float versions of prices from the product results
-        const regPrices = await page.evaluate((regPrice) => {
-            const regPrices = document.querySelectorAll(regPrice);
-
-            let values = [];
-            regPrices.forEach(e => {
-                values.push(parseFloat(e.innerHTML.substring(1)));
-            });
-
-            return values;
-        }, loblaw.selectors.regPriceText)
-
-        // confirm prices are in descending order
-        const n = Math.min(regPrices.length, 100);
-        for (let i = 0; i < n - 1; i++) {
-            expect(regPrices[i]).toBeGreaterThanOrEqual(regPrices[i + 1]);
-        }
-
-    }, 20000);
-
-    test("T6 - Responsive version (screen <700px) of T2", async () => {
-        await page.goto(`${LL_SITE}`);
-        await page.setViewport({ width: 600, height: 600 });
-
-        // perform search
-        await page.click(loblaw.selectors.searchBar);
-        await page.type(loblaw.selectors.searchBar, 'oranges');
-        await page.keyboard.press('Enter');
-        await page.waitForNavigation();
-
-        const searchResultText = await page.evaluate((searchResultText) => {
-            const e = document.querySelector(searchResultText);
-            return e.innerHTML;
-        }, loblaw.selectors.searchResultText);
-        expect(searchResultText.toLowerCase().includes('oranges')).toBeTruthy();
-
-        // check for deal in initial results
-        const dealBadge = await page.$(loblaw.selectors.dealBadge);
-        expect(dealBadge).not.toBeNull();
 
     }, 20000);
 
@@ -356,7 +356,7 @@ describe("Zehrs.ca", () => {
 
     }, 20000);
 
-    test("T5 - Responsive version (screen <700px) of T1", async () => {
+    test("T3 - Responsive version (screen <700px) of T1", async () => {
         await page.goto(`${ZR_SITE}`);
         await page.setViewport({ width: 600, height: 600 });
 
@@ -396,7 +396,7 @@ describe("Zehrs.ca", () => {
 
     }, 20000);
 
-    test("T6 - Responsive version (screen <700px) of T2", async () => {
+    test("T4 - Responsive version (screen <700px) of T2", async () => {
         await page.goto(`${ZR_SITE}`);
         await page.setViewport({ width: 600, height: 600 });
 
