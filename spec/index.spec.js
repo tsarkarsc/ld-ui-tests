@@ -270,4 +270,26 @@ describe("Loblaws.ca", () => {
 
     }, 20000);
 
+    test("T6 - Responsive version (screen <700px) of T2", async () => {
+        await page.goto(`${LL_SITE}`);
+        await page.setViewport({ width: 600, height: 600 });
+
+        // perform search
+        await page.click(loblaw.selectors.searchBar);
+        await page.type(loblaw.selectors.searchBar, 'oranges');
+        await page.keyboard.press('Enter');
+        await page.waitForNavigation();
+
+        const searchResultText = await page.evaluate((searchResultText) => {
+            const e = document.querySelector(searchResultText);
+            return e.innerHTML;
+        }, loblaw.selectors.searchResultText);
+        expect(searchResultText.toLowerCase().includes('oranges')).toBeTruthy();
+
+        // check for deal in initial results
+        const dealBadge = await page.$(loblaw.selectors.dealBadge);
+        expect(dealBadge).not.toBeNull();
+
+    }, 20000);
+
 });
